@@ -49,10 +49,14 @@ async fn execute(uri: Uri, Json(payload): Json<Payload>, Extension(msm): Extensi
     let service_name_vec: Vec<&str> = uri_string.split("/").collect();
     let service_name_from_uri = service_name_vec[1];
     println!("{}", service_name_from_uri);
-    for service in msm.services {
-        if service.name == service_name_from_uri && service.availible {
-            return format!("{:?}", service.execute());
-        }
-    }
-    format!("{:?}", "hello")
+    let services = msm.services;
+    let service = services.get(service_name_from_uri).unwrap().clone();
+
+    // for service in msm.services {
+    //     if service.name == service_name_from_uri && service.availible {
+    //         return format!("{:?}", service.execute());
+    //     }
+    // }
+    let exec_result = service.execute();
+    format!("{:?}", exec_result.to_string())
 }

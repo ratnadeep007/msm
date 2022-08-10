@@ -1,4 +1,4 @@
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 use std::str::FromStr;
 use std::{fs, process::Command};
 
@@ -158,18 +158,25 @@ impl Service {
 
 #[derive(Clone)]
 pub struct MSM {
-    pub services: Vec<Service>,
+    pub services: HashMap<String, Service>,
 }
 
 impl MSM {
     pub fn new() -> Self {
-        let mut services: Vec<Service> = Vec::new();
+        let mut services: HashMap<String, Service> = HashMap::new();
         let service_dir = fs::read_dir("./src/services").unwrap();
         for service in service_dir {
             let dir = service.unwrap();
             let dir_str = dir.path();
             let dir_str = dir_str.to_str().unwrap();
-            services.push(Service::scanner(String::from_str(dir_str).unwrap()));
+            println!("{}", dir_str);
+            let service_name_list: Vec<&str> = dir_str.split('/').collect();
+            let service_name = service_name_list.last().expect("service name error");
+            // services.insert(Service::scanner(String::from_str(dir_str).unwrap()));
+            services.insert(
+                service_name.to_string(),
+                Service::scanner(String::from_str(dir_str).unwrap()),
+            );
         }
 
         MSM { services }
