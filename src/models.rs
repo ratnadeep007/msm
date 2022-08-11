@@ -1,8 +1,15 @@
-use std::collections::{HashMap, HashSet};
+extern crate colored;
+
+use colored::*;
+
+use std::collections::HashMap;
 use std::str::FromStr;
 use std::{fs, process::Command};
+extern crate dotenv;
 
-use sqlite::Connection;
+use dotenv::dotenv;
+
+use std::env;
 
 #[derive(Debug, Clone)]
 pub enum ServiceTypes {
@@ -32,8 +39,6 @@ impl Runner {
             ServiceTypes::Node => {
                 let mut cmd = Command::new(&self.exec_path);
                 cmd.arg(&self.entry_point);
-                // TODO: add envs using below
-                cmd.env("MSM", "true");
 
                 let run_output = cmd.output().expect("Error");
                 let err = run_output.stderr;
@@ -163,16 +168,32 @@ pub struct MSM {
 
 impl MSM {
     pub fn new() -> Self {
+        dotenv().ok();
+        let dir = match env::var("DIR") {
+            Ok(val) => val,
+            Err(_e) => "./services".to_string(),
+        };
         let mut services: HashMap<String, Service> = HashMap::new();
-        let service_dir = fs::read_dir("./src/services").unwrap();
+        let service_dir = match fs::read_dir(dir.clone()) {
+            Ok(file) => file,
+            Err(error) => {
+                println!(
+                    "{}",
+                    format!("Problem reading dir '{}': {}", dir, error).red()
+                );
+                std::process::exit(1);
+            }
+        };
         for service in service_dir {
             let dir = service.unwrap();
             let dir_str = dir.path();
             let dir_str = dir_str.to_str().unwrap();
-            println!("{}", dir_str);
             let service_name_list: Vec<&str> = dir_str.split('/').collect();
             let service_name = service_name_list.last().expect("service name error");
-            // services.insert(Service::scanner(String::from_str(dir_str).unwrap()));
+            println!(
+                "{}",
+                format!("Registring Service: {} from {}", service_name, dir_str).green()
+            );
             services.insert(
                 service_name.to_string(),
                 Service::scanner(String::from_str(dir_str).unwrap()),

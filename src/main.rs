@@ -1,25 +1,42 @@
-mod db;
 mod models;
-mod utils;
 
+extern crate colored;
 extern crate dotenv;
 
+use colored::*;
 use dotenv::dotenv;
 use serde::Deserialize;
 
 use crate::models::MSM;
-use std::env;
 
-use axum::{http::StatusCode, response::IntoResponse, routing::post, Extension, Json, Router};
+use axum::{routing::post, Extension, Json, Router};
+use clap::Parser;
 use http::Uri;
+
+#[derive(Debug, Parser)]
+#[clap(about, version, author)]
+struct Args {
+    command: Option<String>,
+}
 
 #[tokio::main]
 async fn main() {
     dotenv().ok();
-    // for (key, value) in env::vars() {
-    //     println!("ENV: {}: {}", key, value);
-    // }
+    // let envs: Vec<String> = env::args().collect();
+    let args = Args::parse();
+    match args.command.as_deref() {
+        Some(v) => match v {
+            "serve" => {
+                println!("{}", format!("Starting Server").green());
+                start_server().await;
+            }
+            _ => println!("Command not recognised"),
+        },
+        None => println!("Unkown command"),
+    }
+}
 
+async fn start_server() {
     axum::Server::bind(&"0.0.0.0:3000".parse().unwrap())
         .serve(app().into_make_service())
         .await
@@ -28,10 +45,6 @@ async fn main() {
 
 fn app() -> Router {
     let msm = MSM::new();
-    // let services = msm.services;
-    // for service in services {
-    //     service.execute();
-    // }
 
     Router::new()
         .route("/:id", post(execute))
@@ -52,11 +65,6 @@ async fn execute(uri: Uri, Json(payload): Json<Payload>, Extension(msm): Extensi
     let services = msm.services;
     let service = services.get(service_name_from_uri).unwrap().clone();
 
-    // for service in msm.services {
-    //     if service.name == service_name_from_uri && service.availible {
-    //         return format!("{:?}", service.execute());
-    //     }
-    // }
     let exec_result = service.execute();
     format!("{:?}", exec_result.to_string())
 }

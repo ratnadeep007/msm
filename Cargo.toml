@@ -2,6 +2,8 @@
 name = "msm"
 version = "0.1.0"
 edition = "2021"
+description = "A experimental framework to create apis fast"
+authors = ["Ratnadeep Bhattacharyya"]
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
@@ -13,3 +15,5 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 tokio = { version = "1", features = ["full"] }
 http = "0.2.8"
+clap = { version = "3.2.16", features = ["derive"] }
+colored = "2.0.0"
